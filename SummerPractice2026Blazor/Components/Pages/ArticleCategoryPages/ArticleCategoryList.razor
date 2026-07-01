@@ -2,6 +2,7 @@
 @using Repository.Interfaces
 @using Repository.Entities
 @inject IArticleCategoryRepository _articleCategoryRepository
+@inject NavigationManager _navigationManager
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Article Category List</PageTitle>
@@ -14,6 +15,14 @@
 }
 else
 {
+    <div class="custom-card-header">
+        <h2 class="header-title">Article Category</h2>
+        <button class="btn btn-secondary"
+                @onclick="@(() => _navigationManager.NavigateTo("article-category/create"))">
+            Add New Category
+         </button>
+    </div>
+
     <div class="custom-card-body">
         <RadzenDataGrid Data="@articleCategories" TItem="ArticleCategory" class="custom-table">
             <Columns>
