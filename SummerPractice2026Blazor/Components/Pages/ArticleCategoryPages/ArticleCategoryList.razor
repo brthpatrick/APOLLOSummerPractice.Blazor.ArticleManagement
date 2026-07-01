@@ -1,0 +1,41 @@
+﻿@page "/article-category"
+@using Repository.Interfaces
+@using Repository.Entities
+@inject IArticleCategoryRepository _articleCategoryRepository
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>Article Category List</PageTitle>
+
+@if(isLoading)
+{
+    <div class="loading-overlay">
+        <img src="/images/loading.gif" alt="Loading..." />
+    </div>
+}
+else
+{
+    <div class="custom-card-body">
+        <RadzenDataGrid Data="@articleCategories" TItem="ArticleCategory" class="custom-table">
+            <Columns>
+                <RadzenDataGridColumn TItem="ArticleCategory" Property="Name" Title="Name" />
+            </Columns>
+        </RadzenDataGrid>
+    </div>
+}
+
+@code {
+    private bool isLoading;
+    private List<ArticleCategory> articleCategories;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        await LoadAllCategories();
+        isLoading = false;
+    }
+
+    private async Task LoadAllCategories()
+    {
+        articleCategories = await _articleCategoryRepository.GetAllArticleCategories();
+    }
+}
