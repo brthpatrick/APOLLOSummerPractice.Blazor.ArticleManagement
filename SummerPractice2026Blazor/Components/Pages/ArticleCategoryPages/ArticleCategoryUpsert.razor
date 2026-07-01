@@ -1,0 +1,74 @@
+﻿@page "/article-category/create"
+@page "/article-category/update/{id:Guid}"
+@using SummerPractice2026Blazor.Repository.Interfaces
+@using SummerPractice2026Blazor.Repository.Entities
+@using SummerPractice2026Blazor.Components.Pages.Shared
+@inject IArticleCategoryRepository _articleCategoryRepository
+@inject NavigationManager _navigationManager
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>@(Id == Guid.Empty ? "Create" : "Update") Article Category</PageTitle>
+
+@if (isLoading)
+{
+    <div class="loading-overlay">
+        <img src="/images/loading.gif" alt="Loading..." />
+    </div>
+}
+else
+{
+    <div class="custom-card">
+        <div class="custom-card-header">
+            <h2 class="heaser-title">@(Id == Guid.Empty ? "Create" : "Update") Article Catogory</h2>
+        </div>
+        <div class="custom-card-body">
+            <EditForm Model="articleCategory" FormName="articleCategoryForm">
+                <div class="form-container">
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <RadzenTextBox @bind-Value="articleCategory.Name"
+                                       Name="Name"
+                                       Placeholder="Name"
+                                       style="width: 100%"> 
+                         </RadzenTextBox>
+                     </div>
+                     <div class="form-actions">
+                         <Button Type="submit" Disabled="isLoading">
+                             @(Id == Guid.Empty ? "Create" : "Update")
+                         </Button>
+                         <Button Class="btn btn-danger"
+                                OnClick="@(() => _navigationManager
+                                        .NavigateTo("article-category"))"> 
+                                Back To List
+                          </Button>
+                     </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+    
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private bool isLoading;
+
+    private ArticleCategory articleCategory = new ArticleCategory();
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        await LoadArticleCategory();
+        isLoading = false;
+    }
+
+    private async Task LoadArticleCategory()
+    {
+        if(Id != Guid.Empty)
+        {
+            articleCategory = await _articleCategoryRepository.GetArticleCategoryById(Id);
+        }
+    }
+}
