@@ -6,5 +6,6 @@ namespace SummerPractice2026Blazor.Repository
 {
   public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
   {
+        DbSet<ArticleCategory> ArticleCategories => Set<ArticleCategory>();
   }
 }
