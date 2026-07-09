@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\SummerPractice2026Blazor",
+    "\\SummerPractice2026Blazor\\Components\\Account",
+    "\\SummerPractice2026Blazor\\Components\\Account\\Pages",
+    "\\SummerPractice2026Blazor\\Components\\Layout",
+    "\\SummerPractice2026Blazor\\Components\\Pages",
+    "\\SummerPractice2026Blazor\\Components\\Pages\\ArticleCategoryPages",
+    "\\SummerPractice2026Blazor\\Migrations",
+    "\\SummerPractice2026Blazor\\Repository",
+    "\\SummerPractice2026Blazor\\Repository\\Entities"
+  ],
+  "SelectedNode": "\\SummerPractice2026Blazor\\Repository\\Entities\\ArticleCategory.cs",
+  "PreviewInSolutionExplorer": false
+}

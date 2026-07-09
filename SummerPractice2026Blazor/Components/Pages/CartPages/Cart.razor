@@ -1,0 +1,180 @@
+﻿@page "/cart"
+@layout HomeLayout
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using SummerPractice2026Blazor.Components.Shared
+@using SummerPractice2026Blazor.Repository.Entities
+@using SummerPractice2026Blazor.Repository.Interfaces
+@using SummerPractice2026Blazor.Services
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject ICartService CartService
+@inject IArticleRepository ArticleRepository
+@inject NavigationManager NavigationManager
+
+<PageTitle>Shopping Cart</PageTitle>
+
+<div class="cart-page">
+    <div class="cart-page-header">
+        <div>
+            <h1>Shopping Cart</h1>
+            <p>Review the items in your cart and proceed to checkout.</p>
+        </div>
+        <Button Class="btn btn-outline-secondary" OnClick="ContinueShopping">&#8592; Continue Shopping</Button>
+    </div>
+
+    
+    @if (isLoading)
+    {
+        <p>Loading...</p>
+    }
+    else if (lines.Count == 0)
+    {
+        <p class="cart-empty">Your cart is empty.</p>
+    }
+    else
+    {
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var line in lines)
+                {
+                    <tr>
+                        <td class="cart-product">
+                            <img src="@line.Article.ImageUrl" alt="@line.Article.Name" />
+                            <div>
+                                <div class="cart-product-name">@line.Article.Name</div>
+                                <div class="cart-product-desc">@line.Article.Description</div>
+                            </div>
+                        </td>
+                        <td>@line.Article.Price.ToString("0.00")$</td>
+                        <td>
+                            <div class="qty-control">
+                                <Button Class="qty-btn" Disabled="@(line.Quantity <= 1)" OnClick="@(() => DecreaseQuantity(line))">-</Button>
+                                <span>@line.Quantity</span>
+                                <Button Class="qty-btn" OnClick="@(() => IncreaseQuantity(line))">+</Button>
+                            </div>
+                        </td>
+                        <td>@((line.Article.Price * line.Quantity).ToString("0.00"))$</td>
+                        <td>
+                            <Button Class="btn-remove" OnClick="@(() => RemoveLine(line))">Remove</Button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="cart-summary-row">
+            <div class="shipping-info">
+                <span class="bi bi-truck-home" aria-hidden="true"></span>
+                <div>
+                    <div class="shipping-title">Shipping Information</div>
+                    <div class="shipping-text">Shipping costs and delivery details will be calculated at checkout.</div>
+                </div>
+            </div>
+
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span>Subtotal (@TotalQuantity items)</span>
+                    <span>@Subtotal.ToString("0.00")$</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping</span>
+                    <span>@ShippingFee.ToString("0.00")$</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax (20%)</span>
+                    <span>@Tax.ToString("0.00")$</span>
+                </div>
+                <div class="summary-row summary-total">
+                    <span>Total</span>
+                    <span>@Total.ToString("0.00")$</span>
+                </div>
+                <Button Class="btn-checkout" OnClick="Checkout">
+                    <span class="bi bi-cart-fill-home" aria-hidden="true"></span> Proceed to Checkout
+                </Button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<CartLineViewModel> lines = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCartAsync();
+    }
+
+    private async Task LoadCartAsync()
+    {
+        isLoading = true;
+        var items = await CartService.GetItemsAsync();
+        var loadedLines = new List<CartLineViewModel>();
+
+        foreach (var item in items)
+        {
+            var article = await ArticleRepository.GetArticleByIdAsync(item.ArticleId);
+            if (article is not null)
+            {
+                loadedLines.Add(new CartLineViewModel { Article = article, Quantity = item.Quantity });
+            }
+        }
+
+        lines = loadedLines;
+        isLoading = false;
+    }
+
+    private decimal Subtotal => lines.Sum(l => l.Article.Price * l.Quantity);
+
+    private int TotalQuantity => lines.Sum(l => l.Quantity);
+
+    private decimal ShippingFee => lines.Count > 0 ? 9.90m : 0m;
+
+    private decimal Tax => Math.Round((Subtotal + ShippingFee) * 0.20m, 2);
+
+    private decimal Total => Subtotal + ShippingFee + Tax;
+
+    private async Task IncreaseQuantity(CartLineViewModel line)
+    {
+        await CartService.UpdateQuantityAsync(line.Article.Id, line.Quantity + 1);
+        await LoadCartAsync();
+    }
+
+    private async Task DecreaseQuantity(CartLineViewModel line)
+    {
+        await CartService.UpdateQuantityAsync(line.Article.Id, line.Quantity - 1);
+        await LoadCartAsync();
+    }
+
+    private async Task RemoveLine(CartLineViewModel line)
+    {
+        await CartService.RemoveFromCartAsync(line.Article.Id);
+        await LoadCartAsync();
+    }
+
+    private async Task Checkout()
+    {
+        await CartService.ClearCartAsync();
+        await LoadCartAsync();
+    }
+
+    private void ContinueShopping()
+    {
+        NavigationManager.NavigateTo("/home");
+    }
+
+    private class CartLineViewModel
+    {
+        public required Article Article { get; set; }
+        public int Quantity { get; set; }
+    }
+}

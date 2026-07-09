@@ -1,0 +1,7 @@
+﻿.article-thumbnail {
+    width: 60px !important;
+    height: 60px !important;
+    object-fit: cover !important;
+    border-radius: 4px;
+    display: block;
+}

@@ -1,15 +1,14 @@
-﻿using Radzen.Blazor.Markdown;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SummerPractice2026Blazor.Repository.Entities;
-
-public class Article
+namespace SummerPractice2026Blazor.Repository.Entities
 {
+  public class Article
+  {
     public Guid Id { get; set; }
 
     public string Name { get; set; } = string.Empty;
 
-    public decimal Price { get; set; } 
+    public decimal Price { get; set; }
 
     public string? Description { get; set; }
 
@@ -18,7 +17,8 @@ public class Article
     public Guid ArticleCategoryId { get; set; }
 
     [ForeignKey(nameof(ArticleCategoryId))]
-    public ArticleCategory ArticleCategory { get; set; } = null;
+    public ArticleCategory ArticleCategory { get; set; } = null!;
 
     public string? ImageUrl { get; set; }
+  }
 }

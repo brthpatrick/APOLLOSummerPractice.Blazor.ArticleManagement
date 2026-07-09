@@ -1,0 +1,165 @@
+﻿@page "/article/create"
+@page "/article/update/{ArticleId:guid}"
+@attribute [Authorize(Roles = CustomRoles.Role_Admin)]
+@using SummerPractice2026Blazor.Constants
+@using Microsoft.AspNetCore.Authorization
+@using SummerPractice2026Blazor.Components.Shared
+@using SummerPractice2026Blazor.Repository.Entities
+@using SummerPractice2026Blazor.Repository.Interfaces
+@using SummerPractice2026Blazor.Services
+@inject IArticleRepository _articleRepository
+@inject IArticleCategoryRepository _articleCategoryRepository
+@inject NavigationManager _navigationManager
+@inject ArticleImageService _articleImageService
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>@(ArticleId == Guid.Empty ? "Create" : "Update") Article</PageTitle>
+
+@if (IsProcessing)
+{
+  <div class="loading-overlay">
+    <img src="/images/loading.gif" alt="loading" />
+  </div>
+}
+else
+{
+  <div class="custom-card">
+    <div class="custom-card-header">
+      <h2 class="header-title">@(ArticleId == Guid.Empty ? "Create" : "Update") Article</h2>
+    </div>
+    <div class="custom-card-body">
+      <EditForm Model="article" FormName="ArticleUpsertForm" OnValidSubmit="UpsertArticle">
+        <FluentValidationValidator />
+        <div class="form-container">
+          <div class="form-group">
+            <label for="Name">Name</label>
+            <RadzenTextBox @bind-Value="article.Name" Name="Name" id="Name" Placeholder="Name" Style="width: 100%;" />
+            <ValidationMessage For="@(() => article.Name)" />
+          </div>
+          <div class="form-group">
+            <label for="Description">Description</label>
+            <RadzenTextBox @bind-Value="article.Description" Name="Description" id="Description" Placeholder="Description" Style="width: 100%;" />
+            <ValidationMessage For="@(() => article.Description)" />
+          </div>
+          <div class="form-group">
+            <label for="SpecialTag">Special Tag</label>
+            <RadzenTextBox @bind-Value="article.SpecialTag" Name="SpecialTag" id="SpecialTag" Placeholder="SpecialTag" Style="width: 100%;" />
+            <ValidationMessage For="@(() => article.SpecialTag)" />
+          </div>
+          <div class="form-group">
+            <label for="Price">Price</label>
+            <RadzenNumeric @bind-Value="article.Price" Name="Price" id="Price" Placeholder="Price" Style="width: 100%;" Min="0.01m" Max="1000m" Step="0.01m" />
+            <ValidationMessage For="@(() => article.Price)" />
+          </div>
+          <div class="form-group">
+            <label for="articleCategory">Article Category</label>
+            <RadzenDropDown Data="@_articleCategories"
+                            TextProperty="Name"
+                            ValueProperty="Id"
+                            @bind-Value="article.ArticleCategoryId"
+                            Name="ArticleCategoryId"
+                            id="articleCategory"
+                            Placeholder="--Select Article Category--"
+                            Style="width: 100%;" />
+            <ValidationMessage For="@(() => article.ArticleCategoryId)" />
+          </div>
+
+          <div class="form-group">
+            @if (article.ImageUrl == null)
+            {
+              <label for="customFile">Upload Image</label>
+              <InputFile OnChange="SaveInputFile" class="input-file" id="customFile" accept="image/x-png,image/jpeg"></InputFile>
+            }
+            @if (article.ImageUrl != null)
+            {
+              <div class="image-preview-row">
+                <div class="image-preview-thumbnail">
+                  <img src="@article.ImageUrl" alt="Article Image" class="image-thumbnail">
+                </div>
+                <div class="image-preview-actions">
+                  <Button Class="btn btn-danger"
+                          OnClick="DeleteImage">
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            }
+          </div>
+          <div class="form-actions">
+            <Button Type="ButtonType.Submit"
+                    Disabled="@IsProcessing" >
+              @(ArticleId == Guid.Empty ? "Create" : "Update")
+            </Button>
+            <Button Class="btn btn-danger"
+                    Disabled="@IsProcessing"
+                    OnClick="@(() => _navigationManager.NavigateTo("article"))">
+              Back to List
+            </Button>
+          </div>
+        </div>
+      </EditForm>
+    </div>
+  </div>
+}
+
+@code {
+  [Parameter]
+  public Guid ArticleId { get; set; }
+
+  [SupplyParameterFromForm]
+  private Article article { get; set; } = new();
+
+  private bool IsProcessing;
+
+  private IEnumerable<ArticleCategory> _articleCategories = [];
+
+  protected override async Task OnInitializedAsync()
+  {
+    IsProcessing = true;
+    await LoadArticleAndArticleCategoryList();
+    IsProcessing = false;
+  }
+
+  private async Task LoadArticleAndArticleCategoryList()
+  {
+    if (ArticleId != Guid.Empty)
+    {
+      article = await _articleRepository.GetArticleByIdAsync(ArticleId);
+    }
+    _articleCategories = await _articleCategoryRepository.GetAllArticleCategories();
+  }
+
+  private async Task UpsertArticle()
+  {
+    IsProcessing = true;
+    if (article.Id == Guid.Empty)
+    {
+      await _articleRepository.CreateArticleAsync(article);
+    }
+    else
+    {
+      await _articleRepository.UpdateArticleAsync(article);
+    }
+    IsProcessing = false;
+
+    _navigationManager.NavigateTo("article");
+  }
+
+  private async Task SaveInputFile(InputFileChangeEventArgs e)
+  {
+    IsProcessing = true;
+    article.ImageUrl = await _articleImageService.SaveFileAsync(e.File);
+    IsProcessing = false;
+  }
+
+  private void DeleteImage()
+  {
+    if (article.ImageUrl == null)
+    {
+      return;
+    }
+
+    _articleImageService.DeleteFile(article.ImageUrl);
+    article.ImageUrl = null;
+  }
+}

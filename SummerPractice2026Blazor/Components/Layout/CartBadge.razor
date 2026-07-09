@@ -1,0 +1,35 @@
+﻿@implements IDisposable
+@using SummerPractice2026Blazor.Services
+@inject ICartService CartService
+
+<a href="cart" class="cart-link">
+    <span class="cart-icon-wrap">
+        <span class="bi bi-cart-fill-home" aria-hidden="true"></span>
+        @if (cartCount > 0)
+        {
+            <span class="cart-badge">@cartCount</span>
+        }
+    </span>
+    My Cart
+</a>
+
+@code {
+    private int cartCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CartService.CartChanged += OnCartChanged;
+        cartCount = await CartService.GetDistinctItemCountAsync();
+    }
+
+    private async void OnCartChanged()
+    {
+        cartCount = await CartService.GetDistinctItemCountAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        CartService.CartChanged -= OnCartChanged;
+    }
+}

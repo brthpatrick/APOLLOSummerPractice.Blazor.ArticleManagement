@@ -24,7 +24,10 @@ builder.Services.AddScoped<ArticleImageService>();
 builder.Services.AddRadzenComponents();
 builder.Services.AddScoped<DialogService>();
 builder.Services.AddScoped<IArticleCategoryRepository, ArticleCategoryRepository>();
+builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
 builder.Services.AddValidatorsFromAssemblyContaining<ArticleCategoryValidator>();
+builder.Services.AddScoped<ICartService, CartService>();
+
 
 builder.Services.AddAuthentication(options =>
     {
@@ -43,6 +46,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
       options.SignIn.RequireConfirmedAccount = true;
       options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
     })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();

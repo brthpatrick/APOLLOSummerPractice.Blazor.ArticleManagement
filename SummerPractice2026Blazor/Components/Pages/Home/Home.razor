@@ -1,0 +1,27 @@
+﻿@page "/home"
+@layout HomeLayout
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>Home</PageTitle>
+
+<div class="home">
+  <div class="banner">
+    <div class="banner-overlay">
+      <SearchBar SearchText="@SearchText"
+                 SearchTextChanged="OnSearchChanged" />
+    </div>
+  </div>
+
+  <ArticleList SearchText="@SearchText" />
+</div>
+
+@code {
+  private string SearchText { get; set; } = string.Empty;
+
+  private void OnSearchChanged(string searchText)
+  {
+    SearchText = searchText;
+  }
+}
